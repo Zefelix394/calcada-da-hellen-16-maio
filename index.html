@@ -21,20 +21,26 @@
     font-size:16px;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-  html,body{height:100%}
+  html,body{height:100%;overflow:hidden}
   body{
     font-family:'Plus Jakarta Sans',system-ui,sans-serif;
     background:radial-gradient(120% 80% at 50% -10%, #FFFBF3 0%, var(--bg) 45%, var(--bg2) 100%);
     color:var(--ink); line-height:1.45;
     -webkit-font-smoothing:antialiased;
-    padding-bottom:calc(250px + env(safe-area-inset-bottom));
   }
+  .shell{display:flex;flex-direction:column;
+    height:100vh;height:100dvh;overflow:hidden}
   h1,h2,h3{font-family:'Fraunces',Georgia,serif;font-weight:600;letter-spacing:-.01em;line-height:1.15}
   .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
-  .app{max-width:520px;margin:0 auto;padding:0 18px}
+  .app{max-width:520px;width:100%;margin:0 auto;padding:0 18px}
+  main.app{flex:1 1 auto;min-height:0;overflow-y:auto;
+    -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+    padding:0 18px;scroll-padding-bottom:80px}
+  main.app::after{content:"";display:block;height:104px}
 
   /* Header */
-  header{position:sticky;top:0;z-index:30;background:linear-gradient(180deg,var(--bg) 70%,rgba(251,246,238,0));padding-top:max(16px,env(safe-area-inset-top))}
+  header{flex:0 0 auto;background:var(--bg);
+    padding-top:max(16px,env(safe-area-inset-top))}
   .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0 16px}
   .brand{display:flex;flex-direction:column}
   .brand .kicker{font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
@@ -158,9 +164,9 @@
     border-radius:50%;animation:sp .8s linear infinite;margin:0 auto 14px}
   @keyframes sp{to{transform:rotate(360deg)}}
 
-  /* Fixed bottom stack: save bar (only on Adicionar) + nav */
-  .footer{position:fixed;left:0;right:0;bottom:0;z-index:40;
-    background:rgba(251,246,238,.94);backdrop-filter:blur(14px);
+  /* Bottom stack (flex child, not fixed): save bar + nav */
+  .footer{flex:0 0 auto;z-index:40;
+    background:rgba(251,246,238,.97);
     box-shadow:0 -10px 30px -18px rgba(42,36,32,.35)}
   .savebar{display:none;border-top:1px solid var(--line);padding:12px 14px}
   .savebar.show{display:block}
@@ -194,6 +200,7 @@
 </style>
 </head>
 <body>
+<div class="shell">
 
 <header>
   <div class="app top">
@@ -208,7 +215,7 @@
   </div>
 </header>
 
-<main class="app">
+<main class="app" id="scroll">
 
   <!-- ADICIONAR -->
   <section id="add" class="active">
@@ -302,6 +309,9 @@
   </nav>
 </div>
 
+</div>
+<!-- /shell -->
+
 <!-- Identidade -->
 <div class="modal" id="idModal">
   <div class="sheet">
@@ -384,7 +394,7 @@ document.querySelectorAll('nav button').forEach(b=>{
     document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
     $(b.dataset.go).classList.add('active');
     $('savebar').classList.toggle('show', b.dataset.go==='add');
-    window.scrollTo(0,0);
+    $('scroll').scrollTo(0,0);
   };
 }); 
 function goTo(id){ document.querySelector(`nav button[data-go="${id}"]`).click(); }
