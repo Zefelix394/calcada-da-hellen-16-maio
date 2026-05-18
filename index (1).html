@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FBF6EE">
+<title>Calçada da Hellen — Divisão de despesas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FBF6EE; --bg2:#F4ECDD;
+    --surface:#FFFFFF; --surface-2:#FBF7F0;
+    --ink:#2A2420; --muted:#8A8073; --line:#EBE2D2;
+    --accent:#E8633C; --accent-ink:#fff; --accent-soft:#FCEAE0;
+    --pos:#1F7A4D; --pos-soft:#E4F2EA;
+    --neg:#C0392B; --neg-soft:#FBE8E5;
+    --radius:18px; --radius-sm:12px;
+    --shadow:0 1px 2px rgba(42,36,32,.04), 0 12px 28px -16px rgba(42,36,32,.18);
+    font-size:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+    background:radial-gradient(120% 80% at 50% -10%, #FFFBF3 0%, var(--bg) 45%, var(--bg2) 100%);
+    color:var(--ink); line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:calc(86px + env(safe-area-inset-bottom));
+  }
+  h1,h2,h3{font-family:'Fraunces',Georgia,serif;font-weight:600;letter-spacing:-.01em;line-height:1.15}
+  .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+  .app{max-width:520px;margin:0 auto;padding:0 18px}
+
+  /* Header */
+  header{position:sticky;top:0;z-index:30;background:linear-gradient(180deg,var(--bg) 70%,rgba(251,246,238,0));padding-top:max(16px,env(safe-area-inset-top))}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0 16px}
+  .brand{display:flex;flex-direction:column}
+  .brand .kicker{font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+  .brand h1{font-size:1.45rem;margin-top:2px}
+  .me{display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--line);
+    border-radius:999px;padding:7px 8px 7px 14px;box-shadow:var(--shadow);cursor:pointer;flex-shrink:0}
+  .me .who{font-size:.82rem;font-weight:700;max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .me .swap{width:26px;height:26px;border-radius:999px;background:var(--accent-soft);color:var(--accent);
+    display:grid;place-items:center;font-size:.78rem;font-weight:800}
+
+  /* Cards / sections */
+  section{display:none;animation:fade .25s ease}
+  section.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:18px;margin-bottom:14px}
+  .card h2{font-size:1.15rem;margin-bottom:2px}
+  .card .sub{color:var(--muted);font-size:.84rem;margin-bottom:14px}
+
+  /* Form */
+  label{display:block;font-size:.78rem;font-weight:700;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.06em;margin:14px 0 7px}
+  label:first-of-type{margin-top:0}
+  input[type=text],select{
+    width:100%;font:inherit;font-weight:600;color:var(--ink);
+    background:var(--surface-2);border:1.5px solid var(--line);border-radius:var(--radius-sm);
+    padding:13px 14px;outline:none;transition:border-color .15s, background .15s}
+  select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238A8073' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 14px center;padding-right:38px}
+  input:focus,select:focus{border-color:var(--accent);background:#fff}
+  .money-wrap{position:relative}
+  .money-wrap .rs{position:absolute;left:14px;top:50%;transform:translateY(-50%);
+    font-weight:700;color:var(--muted);pointer-events:none}
+  .money-wrap input{padding-left:42px;font-size:1.25rem;font-family:'Fraunces',serif}
+
+  .segmented{display:flex;background:var(--surface-2);border:1.5px solid var(--line);
+    border-radius:var(--radius-sm);padding:4px;gap:4px;margin-top:4px}
+  .segmented button{flex:1;font:inherit;font-weight:700;font-size:.86rem;border:0;background:transparent;
+    color:var(--muted);padding:10px;border-radius:9px;cursor:pointer;transition:.15s}
+  .segmented button.on{background:var(--accent);color:var(--accent-ink);box-shadow:var(--shadow)}
+
+  .people{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+  .prow{display:flex;align-items:center;gap:12px;background:var(--surface-2);
+    border:1.5px solid var(--line);border-radius:var(--radius-sm);padding:11px 13px;cursor:pointer;transition:.15s}
+  .prow.sel{border-color:var(--accent);background:var(--accent-soft)}
+  .prow .box{width:22px;height:22px;border-radius:7px;border:2px solid var(--line);
+    display:grid;place-items:center;flex-shrink:0;transition:.15s}
+  .prow.sel .box{background:var(--accent);border-color:var(--accent)}
+  .prow .box svg{opacity:0;transition:.15s}
+  .prow.sel .box svg{opacity:1}
+  .prow .pname{font-weight:700;flex:1}
+  .prow .share{font-variant-numeric:tabular-nums;font-weight:700;color:var(--muted);font-size:.9rem}
+  .prow .mini{width:104px;flex-shrink:0;position:relative}
+  .prow .mini .rs{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:.76rem;color:var(--muted);font-weight:700}
+  .prow .mini input{padding:8px 8px 8px 26px;font-size:.92rem;border-radius:9px;background:#fff}
+  .prow .mini input:disabled{opacity:.45}
+
+  .tally{display:flex;justify-content:space-between;align-items:center;margin-top:12px;
+    padding:11px 14px;border-radius:var(--radius-sm);font-weight:700;font-size:.9rem}
+  .tally.ok{background:var(--pos-soft);color:var(--pos)}
+  .tally.bad{background:var(--neg-soft);color:var(--neg)}
+
+  .btn{width:100%;font:inherit;font-weight:800;font-size:1rem;border:0;cursor:pointer;
+    background:var(--accent);color:var(--accent-ink);padding:16px;border-radius:14px;
+    margin-top:18px;box-shadow:0 10px 22px -10px rgba(232,99,60,.6);transition:.15s}
+  .btn:disabled{background:var(--line);color:var(--muted);box-shadow:none;cursor:not-allowed}
+  .btn:active:not(:disabled){transform:translateY(1px)}
+  .btn.ghost{background:transparent;color:var(--muted);box-shadow:none;border:1.5px solid var(--line);margin-top:10px}
+  .btn.danger{background:transparent;color:var(--neg);border:1.5px solid var(--neg-soft);box-shadow:none}
+
+  .msg{font-size:.84rem;font-weight:600;margin-top:12px;padding:11px 14px;border-radius:var(--radius-sm);display:none}
+  .msg.show{display:block}
+  .msg.err{background:var(--neg-soft);color:var(--neg)}
+  .msg.suc{background:var(--pos-soft);color:var(--pos)}
+
+  /* History */
+  .exp{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:15px 16px;margin-bottom:11px}
+  .exp .h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .exp .desc{font-weight:800;font-size:1rem}
+  .exp .place{font-size:.82rem;color:var(--muted);margin-top:1px}
+  .exp .amt{font-family:'Fraunces',serif;font-weight:600;font-size:1.18rem;white-space:nowrap}
+  .exp .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+  .chip{font-size:.74rem;font-weight:700;background:var(--surface-2);border:1px solid var(--line);
+    color:var(--muted);padding:4px 9px;border-radius:999px}
+  .chip.pay{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+  .exp .split{font-size:.8rem;color:var(--muted);margin-top:10px;line-height:1.6}
+  .exp .acts{display:flex;gap:8px;margin-top:12px;border-top:1px solid var(--line);padding-top:11px}
+  .exp .acts button{flex:1;font:inherit;font-weight:700;font-size:.82rem;border:0;cursor:pointer;
+    background:var(--surface-2);color:var(--ink);padding:9px;border-radius:9px}
+  .exp .acts button.del{color:var(--neg)}
+
+  /* Balances */
+  .bal{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--line)}
+  .bal:last-child{border-bottom:0}
+  .bal .nm{font-weight:700}
+  .bal .v{font-family:'Fraunces',serif;font-weight:600;font-size:1.05rem}
+  .bal .v.pos{color:var(--pos)} .bal .v.neg{color:var(--neg)} .bal .v.zero{color:var(--muted)}
+  .settle{display:flex;align-items:center;gap:10px;padding:13px 14px;background:var(--surface-2);
+    border:1px solid var(--line);border-radius:var(--radius-sm);margin-bottom:9px;font-weight:600;font-size:.92rem}
+  .settle .ar{color:var(--accent);font-weight:800}
+  .settle b{font-family:'Fraunces',serif}
+
+  .empty{text-align:center;color:var(--muted);padding:46px 20px}
+  .empty .big{font-size:2.4rem;margin-bottom:8px}
+  .empty p{font-size:.92rem}
+  .center{text-align:center;color:var(--muted);padding:40px 0;font-weight:600}
+  .spin{width:30px;height:30px;border:3px solid var(--line);border-top-color:var(--accent);
+    border-radius:50%;animation:sp .8s linear infinite;margin:0 auto 14px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  /* Bottom nav */
+  nav{position:fixed;left:0;right:0;bottom:0;z-index:40;
+    padding:8px 14px calc(8px + env(safe-area-inset-bottom));
+    background:rgba(251,246,238,.92);backdrop-filter:blur(14px);border-top:1px solid var(--line)}
+  .nav-in{max-width:520px;margin:0 auto;display:flex;gap:8px}
+  nav button{flex:1;font:inherit;font-weight:700;font-size:.74rem;border:0;background:transparent;
+    color:var(--muted);padding:8px 4px;border-radius:13px;cursor:pointer;display:flex;
+    flex-direction:column;align-items:center;gap:4px;transition:.15s}
+  nav button svg{width:21px;height:21px}
+  nav button.on{color:var(--accent);background:var(--accent-soft)}
+
+  /* Modal */
+  .modal{position:fixed;inset:0;z-index:60;background:rgba(42,36,32,.5);
+    display:none;align-items:flex-end;justify-content:center;padding:0}
+  .modal.show{display:flex;animation:fade .2s}
+  .sheet{background:var(--bg);width:100%;max-width:520px;border-radius:24px 24px 0 0;
+    padding:22px 20px calc(26px + env(safe-area-inset-bottom));max-height:86vh;overflow:auto;
+    animation:up .28s cubic-bezier(.2,.8,.2,1)}
+  @keyframes up{from{transform:translateY(100%)}to{transform:none}}
+  .sheet h2{font-size:1.3rem;margin-bottom:4px}
+  .sheet .sub{color:var(--muted);font-size:.88rem;margin-bottom:18px}
+  .pick{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .pick button{font:inherit;font-weight:700;font-size:.92rem;border:1.5px solid var(--line);
+    background:var(--surface);color:var(--ink);padding:14px 10px;border-radius:13px;cursor:pointer;transition:.15s}
+  .pick button:active{transform:scale(.97)}
+  .pick button.cur{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="app top">
+    <div class="brand">
+      <span class="kicker">Divisão de despesas</span>
+      <h1>Calçada da Hellen</h1>
+    </div>
+    <div class="me" id="meBtn">
+      <span class="who" id="meName">—</span>
+      <span class="swap">⇄</span>
+    </div>
+  </div>
+</header>
+
+<main class="app">
+
+  <!-- ADICIONAR -->
+  <section id="add" class="active">
+    <div class="card">
+      <h2 id="formTitle">Novo gasto</h2>
+      <p class="sub" id="formSub">Registre o que foi pago e com quem dividir.</p>
+
+      <label>Quem pagou</label>
+      <select id="paidBy"></select>
+
+      <label>Local / fornecedor</label>
+      <input type="text" id="place" placeholder="Ex.: Bar do Zé, Mercado, Uber" autocomplete="off">
+
+      <label>Descrição</label>
+      <input type="text" id="desc" placeholder="Ex.: Rodada de cerveja" autocomplete="off">
+
+      <label>Valor total</label>
+      <div class="money-wrap">
+        <span class="rs">R$</span>
+        <input type="text" id="total" inputmode="numeric" placeholder="0,00">
+      </div>
+
+      <label>Como dividir</label>
+      <div class="segmented">
+        <button id="mEqual" class="on" type="button">Igualmente</button>
+        <button id="mManual" type="button">Valores manuais</button>
+      </div>
+
+      <label>Dividir com</label>
+      <div class="people" id="people"></div>
+
+      <div class="tally" id="tally" style="display:none"></div>
+      <div class="msg" id="addMsg"></div>
+
+      <button class="btn" id="saveBtn">Salvar gasto</button>
+      <button class="btn ghost" id="cancelEdit" style="display:none">Cancelar edição</button>
+    </div>
+  </section>
+
+  <!-- GASTOS -->
+  <section id="list">
+    <div id="listBody"></div>
+  </section>
+
+  <!-- ACERTO -->
+  <section id="settle">
+    <div class="card">
+      <h2>Saldos</h2>
+      <p class="sub">Verde recebe, vermelho paga.</p>
+      <div id="balances"></div>
+    </div>
+    <div class="card">
+      <h2>Quem paga quem</h2>
+      <p class="sub">Menor número de transferências para zerar tudo.</p>
+      <div id="transfers"></div>
+    </div>
+    <div class="card">
+      <h2>Encerrar conta</h2>
+      <p class="sub">Apaga todos os lançamentos deste grupo para começar uma rodada nova. Não dá para desfazer.</p>
+      <button class="btn danger" id="resetBtn">Resetar a conta</button>
+    </div>
+  </section>
+
+</main>
+
+<nav>
+  <div class="nav-in">
+    <button data-go="add" class="on">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Adicionar
+    </button>
+    <button data-go="list">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+      Gastos
+    </button>
+    <button data-go="settle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 6h18M7 12h10M10 18h4"/></svg>
+      Acerto
+    </button>
+  </div>
+</nav>
+
+<!-- Identidade -->
+<div class="modal" id="idModal">
+  <div class="sheet">
+    <h2 id="idTitle">Quem é você?</h2>
+    <p class="sub">Selecione seu nome. Fica salvo só neste aparelho.</p>
+    <div class="pick" id="idPick"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc,
+  onSnapshot, serverTimestamp, getDocs }
+  from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+
+/* ============================================================
+   CONFIGURAÇÃO  —  edite só estas duas coisas se precisar
+   ============================================================ */
+
+// COLE AQUI AS SUAS CHAVES DO FIREBASE (já preenchido):
+const firebaseConfig = {
+  apiKey: "AIzaSyAQE5Mo6luEZcROOzvGtBB60yh-3Dtm9SQ",
+  authDomain: "calcada-da-hellen-16-maio.firebaseapp.com",
+  projectId: "calcada-da-hellen-16-maio",
+  storageBucket: "calcada-da-hellen-16-maio.firebasestorage.app",
+  messagingSenderId: "912793502725",
+  appId: "1:912793502725:web:8c1a607637300ac6d5886c",
+  measurementId: "G-CFW1FTPEXF"
+};
+
+// ID do grupo — troque para reaproveitar o app em outra rodada/grupo:
+const GROUP_ID = "calcada-da-hellen-16-maio";
+
+// Pessoas do grupo:
+const PEOPLE = ["Hellen","José","Alan","Gabi","Helo Girardi","Tiago Moraes",
+  "Cida","Paulo","Dibe","Elo","Digao","Carla","Thiago Paradella","Marília"];
+
+/* ============================================================ */
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const expRef = collection(db, "groups", GROUP_ID, "expenses");
+
+// ---- helpers ----
+const $ = id => document.getElementById(id);
+const brl = c => (c/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const ME_KEY = "cdh_person::" + GROUP_ID;
+
+let me = localStorage.getItem(ME_KEY) || null;
+let mode = "equal";          // equal | manual
+let selected = new Set();    // nomes selecionados para dividir
+let manual = {};             // nome -> centavos (modo manual)
+let totalCents = 0;
+let editingId = null;
+let expenses = [];
+
+// ---------- Identidade ----------
+function buildIdPick(){
+  const p = $('idPick'); p.innerHTML = '';
+  PEOPLE.forEach(n=>{
+    const b = document.createElement('button');
+    b.textContent = n;
+    if(n===me) b.classList.add('cur');
+    b.onclick = ()=>{ me=n; localStorage.setItem(ME_KEY,n);
+      $('meName').textContent=n; $('idModal').classList.remove('show');
+      $('paidBy').value=n; };
+    p.appendChild(b);
+  });
+}
+function openId(){ buildIdPick(); $('idModal').classList.add('show'); }
+$('meBtn').onclick = openId;
+
+// ---------- Navegação ----------
+document.querySelectorAll('nav button').forEach(b=>{
+  b.onclick = ()=>{
+    document.querySelectorAll('nav button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+    $(b.dataset.go).classList.add('active');
+    window.scrollTo(0,0);
+  };
+}); 
+function goTo(id){ document.querySelector(`nav button[data-go="${id}"]`).click(); }
+
+// ---------- Campo de dinheiro (centavos) ----------
+function moneyInput(el, onChange){
+  el.addEventListener('input', ()=>{
+    let d = el.value.replace(/\D/g,'');
+    if(d==='') { el.value=''; onChange(0); return; }
+    d = String(parseInt(d,10));
+    const c = parseInt(d,10);
+    el.value = (c/100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    onChange(c);
+  });
+}
+moneyInput($('total'), c=>{ totalCents=c; renderPeople(); });
+
+// ---------- Modo de divisão ----------
+$('mEqual').onclick = ()=>{ mode='equal'; $('mEqual').classList.add('on'); $('mManual').classList.remove('on'); renderPeople(); };
+$('mManual').onclick = ()=>{ mode='manual'; $('mManual').classList.add('on'); $('mEqual').classList.remove('on'); renderPeople(); };
+
+// ---------- Divisão igual com sobra de centavos ----------
+function equalShares(names){
+  const n = names.length; if(!n) return {};
+  const base = Math.floor(totalCents/n);
+  let rest = totalCents - base*n;
+  const out = {};
+  names.forEach((nm,i)=>{ out[nm] = base + (i<rest?1:0); });
+  return out;
+}
+
+// ---------- Lista de pessoas / divisão ----------
+function renderPeople(){
+  const box = $('people'); box.innerHTML='';
+  const sel = [...selected];
+  const eq = mode==='equal' ? equalShares(sel) : null;
+
+  PEOPLE.forEach(nm=>{
+    const isSel = selected.has(nm);
+    const row = document.createElement('div');
+    row.className = 'prow' + (isSel?' sel':'');
+
+    const box1 = document.createElement('div');
+    box1.className='box';
+    box1.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+    const name = document.createElement('div'); name.className='pname'; name.textContent=nm;
+    row.appendChild(box1); row.appendChild(name);
+
+    if(mode==='equal'){
+      const s = document.createElement('div'); s.className='share';
+      s.textContent = isSel ? brl(eq[nm]||0) : '';
+      row.appendChild(s);
+      row.onclick = ()=>{ isSel?selected.delete(nm):selected.add(nm); renderPeople(); };
+    } else {
+      const mini = document.createElement('div'); mini.className='mini';
+      mini.innerHTML='<span class="rs">R$</span>';
+      const inp = document.createElement('input');
+      inp.type='text'; inp.inputMode='numeric'; inp.placeholder='0,00';
+      inp.disabled = !isSel;
+      if(isSel && manual[nm]) inp.value=(manual[nm]/100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+      inp.addEventListener('input', ()=>{
+        let dd=inp.value.replace(/\D/g,''); const cc=dd===''?0:parseInt(dd,10);
+        manual[nm]=cc;
+        inp.value = cc? (cc/100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) : '';
+        updateTally();
+      });
+      inp.onclick = e=>e.stopPropagation();
+      mini.appendChild(inp); row.appendChild(mini);
+      box1.onclick = ()=>{ if(isSel){selected.delete(nm);delete manual[nm];}else{selected.add(nm);} renderPeople(); };
+      name.onclick = box1.onclick;
+    }
+    box.appendChild(row);
+  });
+  updateTally();
+}
+
+function manualSum(){ return [...selected].reduce((a,n)=>a+(manual[n]||0),0); }
+
+function updateTally(){
+  const t = $('tally');
+  if(mode==='manual' && selected.size>0 && totalCents>0){
+    t.style.display='flex';
+    const s = manualSum(), diff = totalCents - s;
+    if(diff===0){ t.className='tally ok'; t.innerHTML=`<span>Soma confere</span><span class="num">${brl(s)}</span>`; }
+    else if(diff>0){ t.className='tally bad'; t.innerHTML=`<span>Faltam</span><span class="num">${brl(diff)}</span>`; }
+    else { t.className='tally bad'; t.innerHTML=`<span>Passou</span><span class="num">${brl(-diff)}</span>`; }
+  } else { t.style.display='none'; }
+}
+
+// ---------- Salvar ----------
+function showMsg(txt,type){ const m=$('addMsg'); m.textContent=txt; m.className='msg show '+type;
+  if(type==='suc') setTimeout(()=>m.classList.remove('show'),2600); }
+
+$('saveBtn').onclick = async ()=>{
+  const paidBy=$('paidBy').value, place=$('place').value.trim(),
+        desc=$('desc').value.trim();
+  if(!place){ showMsg('Informe o local / fornecedor.','err'); return; }
+  if(!desc){ showMsg('Informe uma descrição.','err'); return; }
+  if(totalCents<=0){ showMsg('O valor total precisa ser maior que zero.','err'); return; }
+  if(selected.size===0){ showMsg('Selecione pelo menos uma pessoa para dividir.','err'); return; }
+
+  let shares;
+  if(mode==='equal'){ shares=equalShares([...selected]); }
+  else {
+    if(manualSum()!==totalCents){ showMsg('No modo manual a soma precisa bater com o total.','err'); return; }
+    shares={}; [...selected].forEach(n=>shares[n]=manual[n]||0);
+  }
+
+  const data={ paidBy, place, desc, totalCents, mode, shares,
+    createdBy:me, createdAtLocal:Date.now(), createdAt:serverTimestamp() };
+
+  const btn=$('saveBtn'); btn.disabled=true; btn.textContent='Salvando…';
+  try{
+    if(editingId){ await updateDoc(doc(expRef,editingId),data); }
+    else { await addDoc(expRef,data); }
+    resetForm();
+    showMsg('Gasto salvo!','suc');
+    goTo('list');
+  }catch(e){ showMsg('Erro ao salvar: '+e.message,'err'); }
+  finally{ btn.disabled=false; btn.textContent=editingId?'Salvar alterações':'Salvar gasto'; }
+};
+
+function resetForm(){
+  editingId=null; selected.clear(); manual={}; totalCents=0;
+  $('place').value=''; $('desc').value=''; $('total').value='';
+  mode='equal'; $('mEqual').classList.add('on'); $('mManual').classList.remove('on');
+  $('formTitle').textContent='Novo gasto';
+  $('formSub').textContent='Registre o que foi pago e com quem dividir.';
+  $('saveBtn').textContent='Salvar gasto';
+  $('cancelEdit').style.display='none';
+  if(me) $('paidBy').value=me;
+  renderPeople();
+}
+$('cancelEdit').onclick = ()=>{ resetForm(); goTo('list'); };
+
+function startEdit(ex){
+  editingId=ex.id;
+  $('paidBy').value=ex.paidBy;
+  $('place').value=ex.place; $('desc').value=ex.desc;
+  totalCents=ex.totalCents;
+  $('total').value=(totalCents/100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  selected=new Set(Object.keys(ex.shares));
+  mode=ex.mode; manual={};
+  if(mode==='manual'){ Object.assign(manual,ex.shares);
+    $('mManual').classList.add('on'); $('mEqual').classList.remove('on'); }
+  else { $('mEqual').classList.add('on'); $('mManual').classList.remove('on'); }
+  $('formTitle').textContent='Editar gasto';
+  $('formSub').textContent='Ajuste os campos e salve as alterações.';
+  $('saveBtn').textContent='Salvar alterações';
+  $('cancelEdit').style.display='block';
+  renderPeople();
+  goTo('add');
+}
+
+async function removeExp(ex){
+  if(!confirm(`Excluir "${ex.desc}" (${brl(ex.totalCents)})?`)) return;
+  try{ await deleteDoc(doc(expRef,ex.id)); }
+  catch(e){ alert('Erro ao excluir: '+e.message); }
+}
+
+// ---------- Render gastos ----------
+function renderList(){
+  const body=$('listBody');
+  if(expenses.length===0){
+    body.innerHTML='<div class="card"><div class="empty"><div class="big">🧾</div><p>Nenhum gasto ainda.<br>Adicione o primeiro na aba <b>Adicionar</b>.</p></div></div>';
+    return;
+  }
+  body.innerHTML='';
+  expenses.forEach(ex=>{
+    const dt=ex.createdAtLocal?new Date(ex.createdAtLocal):null;
+    const when=dt?dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})+' · '+dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
+    const splitTxt=Object.entries(ex.shares).map(([n,c])=>`${n} ${brl(c)}`).join('  ·  ');
+    const el=document.createElement('div'); el.className='exp';
+    el.innerHTML=`
+      <div class="h">
+        <div><div class="desc">${esc(ex.desc)}</div><div class="place">${esc(ex.place)}</div></div>
+        <div class="amt num">${brl(ex.totalCents)}</div>
+      </div>
+      <div class="meta">
+        <span class="chip pay">Pagou: ${esc(ex.paidBy)}</span>
+        <span class="chip">${ex.mode==='equal'?'Igual':'Manual'} · ${Object.keys(ex.shares).length} pessoas</span>
+        ${when?`<span class="chip">${when}</span>`:''}
+      </div>
+      <div class="split">${splitTxt}</div>
+      <div class="acts">
+        <button class="ed">Editar</button>
+        <button class="del">Excluir</button>
+      </div>`;
+    el.querySelector('.ed').onclick=()=>startEdit(ex);
+    el.querySelector('.del').onclick=()=>removeExp(ex);
+    body.appendChild(el);
+  });
+}
+function esc(s){ return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+// ---------- Saldos + quem paga quem ----------
+function renderSettle(){
+  const bal={}; PEOPLE.forEach(n=>bal[n]=0);
+  expenses.forEach(ex=>{
+    bal[ex.paidBy]=(bal[ex.paidBy]||0)+ex.totalCents;
+    Object.entries(ex.shares).forEach(([n,c])=>{ bal[n]=(bal[n]||0)-c; });
+  });
+
+  const bb=$('balances'); bb.innerHTML='';
+  const active=PEOPLE.filter(n=>bal[n]!==0 || expenses.some(e=>e.paidBy===n||e.shares[n]!=null));
+  (active.length?active:PEOPLE).forEach(n=>{
+    const v=bal[n]||0, cls=v>0?'pos':v<0?'neg':'zero';
+    const lbl=v>0?'a receber':v<0?'a pagar':'quitado';
+    const row=document.createElement('div'); row.className='bal';
+    row.innerHTML=`<span class="nm">${esc(n)}</span>
+      <span class="v num ${cls}">${v>0?'+':''}${brl(v)} <span style="font-size:.7rem;color:var(--muted);font-family:'Plus Jakarta Sans'">${lbl}</span></span>`;
+    bb.appendChild(row);
+  });
+
+  // simplificação de dívidas (guloso: maior credor x maior devedor)
+  const cred=[],deb=[];
+  Object.entries(bal).forEach(([n,v])=>{ if(v>0)cred.push({n,v}); else if(v<0)deb.push({n,v:-v}); });
+  cred.sort((a,b)=>b.v-a.v); deb.sort((a,b)=>b.v-a.v);
+  const tr=[]; let i=0,j=0;
+  while(i<deb.length && j<cred.length){
+    const pay=Math.min(deb[i].v,cred[j].v);
+    tr.push({from:deb[i].n,to:cred[j].n,amt:pay});
+    deb[i].v-=pay; cred[j].v-=pay;
+    if(deb[i].v<=0)i++; if(cred[j].v<=0)j++;
+  }
+  const tb=$('transfers');
+  if(tr.length===0){
+    tb.innerHTML='<div class="center" style="padding:24px 0">Tudo certo — ninguém deve nada. ✨</div>';
+  } else {
+    tb.innerHTML='';
+    tr.forEach(t=>{
+      const d=document.createElement('div'); d.className='settle';
+      d.innerHTML=`<span>${esc(t.from)}</span><span class="ar">→</span>
+        <span>${esc(t.to)}</span><b class="num" style="margin-left:auto">${brl(t.amt)}</b>`;
+      tb.appendChild(d);
+    });
+  }
+}
+
+// ---------- Reset ----------
+$('resetBtn').onclick = async ()=>{
+  if(expenses.length===0){ alert('Não há lançamentos para apagar.'); return; }
+  if(!confirm(`Apagar TODOS os ${expenses.length} lançamentos do grupo? Isso não pode ser desfeito.`)) return;
+  if(!confirm('Tem certeza mesmo? Confirme novamente para zerar a conta.')) return;
+  const btn=$('resetBtn'); btn.disabled=true; btn.textContent='Apagando…';
+  try{
+    const snap=await getDocs(expRef);
+    await Promise.all(snap.docs.map(d=>deleteDoc(d.ref)));
+    alert('Conta zerada. Boa próxima rodada!');
+  }catch(e){ alert('Erro ao resetar: '+e.message); }
+  finally{ btn.disabled=false; btn.textContent='Resetar a conta'; }
+};
+
+// ---------- Sincronização em tempo real ----------
+$('listBody').innerHTML='<div class="card"><div class="center"><div class="spin"></div>Conectando…</div></div>';
+onSnapshot(expRef, snap=>{
+  expenses=snap.docs.map(d=>({id:d.id,...d.data()}));
+  expenses.sort((a,b)=>(b.createdAtLocal||0)-(a.createdAtLocal||0));
+  renderList(); renderSettle();
+}, err=>{
+  $('listBody').innerHTML=`<div class="card"><div class="empty"><div class="big">⚠️</div>
+    <p>Sem conexão com o servidor.<br><span style="font-size:.8rem">${esc(err.message)}</span><br><br>
+    Verifique a internet ou se o Firestore está ativo.</p></div></div>`;
+});
+
+// ---------- Init ----------
+$('paidBy').innerHTML=PEOPLE.map(n=>`<option>${esc(n)}</option>`).join('');
+renderPeople();
+if(me){ $('meName').textContent=me; $('paidBy').value=me; }
+else { openId(); }
+</script>
+</body>
+</html>
