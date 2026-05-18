@@ -27,7 +27,7 @@
     background:radial-gradient(120% 80% at 50% -10%, #FFFBF3 0%, var(--bg) 45%, var(--bg2) 100%);
     color:var(--ink); line-height:1.45;
     -webkit-font-smoothing:antialiased;
-    padding-bottom:calc(210px + env(safe-area-inset-bottom));
+    padding-bottom:calc(250px + env(safe-area-inset-bottom));
   }
   h1,h2,h3{font-family:'Fraunces',Georgia,serif;font-weight:600;letter-spacing:-.01em;line-height:1.15}
   .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
@@ -76,20 +76,19 @@
     color:var(--muted);padding:10px;border-radius:9px;cursor:pointer;transition:.15s}
   .segmented button.on{background:var(--accent);color:var(--accent-ink);box-shadow:var(--shadow)}
 
-  .people{display:flex;flex-direction:column;gap:8px;margin-top:4px;
-    max-height:min(46vh,360px);overflow-y:auto;
-    background:var(--surface);border:1.5px solid var(--line);
-    border-radius:var(--radius-sm);padding:8px;
-    -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
-    scrollbar-width:thin;scrollbar-color:#D9CFBC transparent}
-  .people::-webkit-scrollbar{width:10px}
-  .people::-webkit-scrollbar-track{background:transparent;margin:6px 0}
-  .people::-webkit-scrollbar-thumb{background:#D9CFBC;border-radius:99px;
-    border:3px solid var(--surface)}
-  .people::-webkit-scrollbar-thumb:hover{background:#C9BCA2}
-  .scrollhint{font-size:.74rem;color:var(--muted);font-weight:600;
-    margin-top:6px;display:flex;align-items:center;gap:5px}
-  .scrollhint svg{width:13px;height:13px}
+  .people{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+  .scrollhint{display:none}
+  .psearch{position:relative;margin-top:4px}
+  .psearch .ic{position:absolute;left:14px;top:50%;transform:translateY(-50%);
+    width:17px;height:17px;color:var(--muted);pointer-events:none}
+  .psearch input{padding-left:40px;padding-right:42px}
+  .psearch #clearSearch{position:absolute;right:8px;top:50%;transform:translateY(-50%);
+    width:28px;height:28px;border:0;background:var(--surface-2);color:var(--muted);
+    border-radius:999px;font-size:.8rem;font-weight:800;cursor:pointer;display:none}
+  .psearch.has #clearSearch{display:block}
+  .selcount{font-size:.78rem;font-weight:700;color:var(--muted);margin:9px 2px 0}
+  .selcount b{color:var(--accent)}
+  .pempty{text-align:center;color:var(--muted);font-weight:600;font-size:.88rem;padding:22px 10px}
   .prow{display:flex;align-items:center;gap:12px;background:var(--surface-2);
     border:1.5px solid var(--line);border-radius:var(--radius-sm);padding:11px 13px;cursor:pointer;transition:.15s}
   .prow.sel{border-color:var(--accent);background:var(--accent-soft)}
@@ -239,11 +238,13 @@
       </div>
 
       <label>Dividir com</label>
-      <div class="people" id="people"></div>
-      <div class="scrollhint">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
-        Role a lista para ver e marcar todas as pessoas
+      <div class="psearch">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.2-4.2"/></svg>
+        <input type="text" id="peopleSearch" placeholder="Buscar pessoa pelo nome…" autocomplete="off">
+        <button type="button" id="clearSearch" aria-label="Limpar busca">✕</button>
       </div>
+      <div class="selcount" id="selCount">Ninguém selecionado</div>
+      <div class="people" id="people"></div>
 
       <div class="tally" id="tally" style="display:none"></div>
     </div>
@@ -348,11 +349,13 @@ const expRef = collection(db, "groups", GROUP_ID, "expenses");
 const $ = id => document.getElementById(id);
 const brl = c => (c/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const ME_KEY = "cdh_person::" + GROUP_ID;
+const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 
 let me = localStorage.getItem(ME_KEY) || null;
 let mode = "equal";          // equal | manual
 let selected = new Set();    // nomes selecionados para dividir
 let manual = {};             // nome -> centavos (modo manual)
+let peopleQuery = "";        // filtro de busca da lista
 let totalCents = 0;
 let editingId = null;
 let expenses = [];
@@ -411,6 +414,32 @@ $('paidBy').addEventListener('change', ()=>{ if(!editingId) ensurePayerSelected(
 $('mEqual').onclick = ()=>{ mode='equal'; $('mEqual').classList.add('on'); $('mManual').classList.remove('on'); renderPeople(); };
 $('mManual').onclick = ()=>{ mode='manual'; $('mManual').classList.add('on'); $('mEqual').classList.remove('on'); renderPeople(); };
 
+// ---------- Busca de pessoas ----------
+const psEl = $('peopleSearch');
+psEl.addEventListener('input', ()=>{
+  peopleQuery = psEl.value;
+  $('clearSearch').parentElement.classList.toggle('has', peopleQuery.length>0);
+  renderPeople();
+});
+psEl.addEventListener('keydown', e=>{
+  if(e.key!=='Enter') return;
+  e.preventDefault();
+  const q = norm(peopleQuery.trim());
+  if(!q) return;
+  const hits = PEOPLE.filter(nm=>norm(nm).includes(q));
+  if(hits.length===1){
+    const nm = hits[0];
+    if(selected.has(nm)){ if(mode==='manual') delete manual[nm]; selected.delete(nm); }
+    else selected.add(nm);
+    peopleQuery=''; psEl.value=''; psEl.parentElement.classList.remove('has');
+    renderPeople();
+  }
+});
+$('clearSearch').onclick = ()=>{
+  peopleQuery=''; psEl.value=''; psEl.parentElement.classList.remove('has');
+  renderPeople(); psEl.focus();
+};
+
 // ---------- Divisão igual com sobra de centavos ----------
 function equalShares(names){
   const n = names.length; if(!n) return {};
@@ -426,8 +455,15 @@ function renderPeople(){
   const box = $('people'); box.innerHTML='';
   const sel = [...selected];
   const eq = mode==='equal' ? equalShares(sel) : null;
+  const q = norm(peopleQuery.trim());
+  const visible = PEOPLE.filter(nm => !q || norm(nm).includes(q));
 
-  PEOPLE.forEach(nm=>{
+  if(visible.length===0){
+    box.innerHTML='<div class="pempty">Nenhuma pessoa encontrada para “'+esc(peopleQuery)+'”.</div>';
+    updateSelCount(); updateTally(); return;
+  }
+
+  visible.forEach(nm=>{
     const isSel = selected.has(nm);
     const row = document.createElement('div');
     row.className = 'prow' + (isSel?' sel':'');
@@ -463,7 +499,15 @@ function renderPeople(){
     }
     box.appendChild(row);
   });
+  updateSelCount();
   updateTally();
+}
+
+function updateSelCount(){
+  const el = $('selCount'); if(!el) return;
+  const n = selected.size;
+  el.innerHTML = n===0 ? 'Ninguém selecionado'
+    : `<b>${n}</b> ${n===1?'pessoa selecionada':'pessoas selecionadas'}`;
 }
 
 function manualSum(){ return [...selected].reduce((a,n)=>a+(manual[n]||0),0); }
@@ -515,6 +559,7 @@ $('saveBtn').onclick = async ()=>{
 function resetForm(){
   editingId=null; selected.clear(); manual={}; totalCents=0;
   $('place').value=''; $('desc').value=''; $('total').value='';
+  peopleQuery=''; $('peopleSearch').value=''; $('peopleSearch').parentElement.classList.remove('has');
   mode='equal'; $('mEqual').classList.add('on'); $('mManual').classList.remove('on');
   $('formTitle').textContent='Novo gasto';
   $('formSub').textContent='Registre o que foi pago e com quem dividir.';
@@ -532,6 +577,7 @@ function startEdit(ex){
   totalCents=ex.totalCents;
   $('total').value=(totalCents/100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
   selected=new Set(Object.keys(ex.shares));
+  peopleQuery=''; $('peopleSearch').value=''; $('peopleSearch').parentElement.classList.remove('has');
   mode=ex.mode; manual={};
   if(mode==='manual'){ Object.assign(manual,ex.shares);
     $('mManual').classList.add('on'); $('mEqual').classList.remove('on'); }
