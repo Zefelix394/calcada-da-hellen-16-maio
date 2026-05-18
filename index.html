@@ -27,7 +27,7 @@
     background:radial-gradient(120% 80% at 50% -10%, #FFFBF3 0%, var(--bg) 45%, var(--bg2) 100%);
     color:var(--ink); line-height:1.45;
     -webkit-font-smoothing:antialiased;
-    padding-bottom:calc(86px + env(safe-area-inset-bottom));
+    padding-bottom:calc(210px + env(safe-area-inset-bottom));
   }
   h1,h2,h3{font-family:'Fraunces',Georgia,serif;font-weight:600;letter-spacing:-.01em;line-height:1.15}
   .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
@@ -146,10 +146,17 @@
     border-radius:50%;animation:sp .8s linear infinite;margin:0 auto 14px}
   @keyframes sp{to{transform:rotate(360deg)}}
 
-  /* Bottom nav */
-  nav{position:fixed;left:0;right:0;bottom:0;z-index:40;
-    padding:8px 14px calc(8px + env(safe-area-inset-bottom));
-    background:rgba(251,246,238,.92);backdrop-filter:blur(14px);border-top:1px solid var(--line)}
+  /* Fixed bottom stack: save bar (only on Adicionar) + nav */
+  .footer{position:fixed;left:0;right:0;bottom:0;z-index:40;
+    background:rgba(251,246,238,.94);backdrop-filter:blur(14px);
+    box-shadow:0 -10px 30px -18px rgba(42,36,32,.35)}
+  .savebar{display:none;border-top:1px solid var(--line);padding:12px 14px}
+  .savebar.show{display:block}
+  .savebar-in{max-width:520px;margin:0 auto}
+  .savebar .btn{margin-top:0;padding:15px}
+  .savebar .btn.ghost{margin-top:8px;padding:12px}
+  .savebar .msg{margin:0 0 10px}
+  nav{padding:8px 14px calc(8px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
   .nav-in{max-width:520px;margin:0 auto;display:flex;gap:8px}
   nav button{flex:1;font:inherit;font-weight:700;font-size:.74rem;border:0;background:transparent;
     color:var(--muted);padding:8px 4px;border-radius:13px;cursor:pointer;display:flex;
@@ -222,10 +229,6 @@
       <div class="people" id="people"></div>
 
       <div class="tally" id="tally" style="display:none"></div>
-      <div class="msg" id="addMsg"></div>
-
-      <button class="btn" id="saveBtn">Salvar gasto</button>
-      <button class="btn ghost" id="cancelEdit" style="display:none">Cancelar edição</button>
     </div>
   </section>
 
@@ -255,22 +258,31 @@
 
 </main>
 
-<nav>
-  <div class="nav-in">
-    <button data-go="add" class="on">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-      Adicionar
-    </button>
-    <button data-go="list">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-      Gastos
-    </button>
-    <button data-go="settle">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 6h18M7 12h10M10 18h4"/></svg>
-      Acerto
-    </button>
+<div class="footer">
+  <div class="savebar" id="savebar">
+    <div class="savebar-in">
+      <div class="msg" id="addMsg"></div>
+      <button class="btn ghost" id="cancelEdit" style="display:none">Cancelar edição</button>
+      <button class="btn" id="saveBtn">Salvar gasto</button>
+    </div>
   </div>
-</nav>
+  <nav>
+    <div class="nav-in">
+      <button data-go="add" class="on">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        Adicionar
+      </button>
+      <button data-go="list">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+        Gastos
+      </button>
+      <button data-go="settle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 6h18M7 12h10M10 18h4"/></svg>
+        Acerto
+      </button>
+    </div>
+  </nav>
+</div>
 
 <!-- Identidade -->
 <div class="modal" id="idModal">
@@ -337,7 +349,7 @@ function buildIdPick(){
     if(n===me) b.classList.add('cur');
     b.onclick = ()=>{ me=n; localStorage.setItem(ME_KEY,n);
       $('meName').textContent=n; $('idModal').classList.remove('show');
-      $('paidBy').value=n; };
+      $('paidBy').value=n; if(!editingId) ensurePayerSelected(); };
     p.appendChild(b);
   });
 }
@@ -351,6 +363,7 @@ document.querySelectorAll('nav button').forEach(b=>{
     b.classList.add('on');
     document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
     $(b.dataset.go).classList.add('active');
+    $('savebar').classList.toggle('show', b.dataset.go==='add');
     window.scrollTo(0,0);
   };
 }); 
@@ -368,6 +381,14 @@ function moneyInput(el, onChange){
   });
 }
 moneyInput($('total'), c=>{ totalCents=c; renderPeople(); });
+
+// ---------- Quem paga participa da divisão por padrão ----------
+function ensurePayerSelected(){
+  const p = $('paidBy').value;
+  if(p && !selected.has(p)) selected.add(p);
+  renderPeople();
+}
+$('paidBy').addEventListener('change', ()=>{ if(!editingId) ensurePayerSelected(); });
 
 // ---------- Modo de divisão ----------
 $('mEqual').onclick = ()=>{ mode='equal'; $('mEqual').classList.add('on'); $('mManual').classList.remove('on'); renderPeople(); };
@@ -483,7 +504,7 @@ function resetForm(){
   $('saveBtn').textContent='Salvar gasto';
   $('cancelEdit').style.display='none';
   if(me) $('paidBy').value=me;
-  renderPeople();
+  ensurePayerSelected();
 }
 $('cancelEdit').onclick = ()=>{ resetForm(); goTo('list'); };
 
@@ -532,7 +553,7 @@ function renderList(){
       </div>
       <div class="meta">
         <span class="chip pay">Pagou: ${esc(ex.paidBy)}</span>
-        <span class="chip">${ex.mode==='equal'?'Igual':'Manual'} · ${Object.keys(ex.shares).length} pessoas</span>
+        <span class="chip">${ex.mode==='equal'?'Igual':'Manual'} · ${Object.keys(ex.shares).length} ${Object.keys(ex.shares).length===1?'pessoa':'pessoas'}</span>
         ${when?`<span class="chip">${when}</span>`:''}
       </div>
       <div class="split">${splitTxt}</div>
@@ -619,9 +640,10 @@ onSnapshot(expRef, snap=>{
 
 // ---------- Init ----------
 $('paidBy').innerHTML=PEOPLE.map(n=>`<option>${esc(n)}</option>`).join('');
-renderPeople();
+$('savebar').classList.add('show');
 if(me){ $('meName').textContent=me; $('paidBy').value=me; }
-else { openId(); }
+ensurePayerSelected();
+if(!me) openId();
 </script>
 </body>
 </html>
