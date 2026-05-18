@@ -76,7 +76,20 @@
     color:var(--muted);padding:10px;border-radius:9px;cursor:pointer;transition:.15s}
   .segmented button.on{background:var(--accent);color:var(--accent-ink);box-shadow:var(--shadow)}
 
-  .people{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+  .people{display:flex;flex-direction:column;gap:8px;margin-top:4px;
+    max-height:min(46vh,360px);overflow-y:auto;
+    background:var(--surface);border:1.5px solid var(--line);
+    border-radius:var(--radius-sm);padding:8px;
+    -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+    scrollbar-width:thin;scrollbar-color:#D9CFBC transparent}
+  .people::-webkit-scrollbar{width:10px}
+  .people::-webkit-scrollbar-track{background:transparent;margin:6px 0}
+  .people::-webkit-scrollbar-thumb{background:#D9CFBC;border-radius:99px;
+    border:3px solid var(--surface)}
+  .people::-webkit-scrollbar-thumb:hover{background:#C9BCA2}
+  .scrollhint{font-size:.74rem;color:var(--muted);font-weight:600;
+    margin-top:6px;display:flex;align-items:center;gap:5px}
+  .scrollhint svg{width:13px;height:13px}
   .prow{display:flex;align-items:center;gap:12px;background:var(--surface-2);
     border:1.5px solid var(--line);border-radius:var(--radius-sm);padding:11px 13px;cursor:pointer;transition:.15s}
   .prow.sel{border-color:var(--accent);background:var(--accent-soft)}
@@ -227,6 +240,10 @@
 
       <label>Dividir com</label>
       <div class="people" id="people"></div>
+      <div class="scrollhint">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        Role a lista para ver e marcar todas as pessoas
+      </div>
 
       <div class="tally" id="tally" style="display:none"></div>
     </div>
